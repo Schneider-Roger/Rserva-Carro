@@ -1,9 +1,10 @@
 import { pingDatabase } from '../repositories/health.repository.js';
 
-export async function checkHealth() {
-  await pingDatabase();
+export function checkLiveness() {
+  return { status: 'ok' };
+}
 
-  return {
-    status: 'ok',
-  };
+export async function checkReadiness() {
+  await pingDatabase();
+  return { status: 'ready', database: 'ok' };
 }

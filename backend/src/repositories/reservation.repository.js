@@ -1,10 +1,5 @@
 import { pool } from '../config/db.js';
 
-export async function getTenantSettings(empresaId) {
-  const [rows] = await pool.execute('SELECT * FROM empresa_configuracoes WHERE empresa_id = ? LIMIT 1', [empresaId]);
-  return rows[0] || {};
-}
-
 export async function lockVehicle(connection, empresaId, vehicleId) {
   const [rows] = await connection.execute('SELECT id, ativo, status_operacional, unidade_id FROM veiculos WHERE empresa_id = ? AND id = ? FOR UPDATE', [empresaId, vehicleId]);
   return rows[0] || null;
@@ -37,8 +32,9 @@ export async function hasBlockConflict(connection, empresaId, vehicleId, start, 
 }
 
 export async function resolveCities(connection, codes) {
-  const placeholders = codes.map(() => '?').join(',');
-  const [rows] = await connection.execute(`SELECT id, codigo_ibge, nome FROM cidades WHERE codigo_ibge IN (${placeholders})`, codes);
+  const uniqueCodes = [...new Set(codes)];
+  const placeholders = uniqueCodes.map(() => '?').join(',');
+  const [rows] = await connection.execute(`SELECT id, codigo_ibge, nome FROM cidades WHERE codigo_ibge IN (${placeholders})`, uniqueCodes);
   return rows;
 }
 
@@ -69,18 +65,52 @@ export async function insertAudit(connection, empresaId, actorId, action, entity
   await connection.execute(`INSERT INTO auditoria (empresa_id, usuario_id, acao, entidade, entidade_id, dados_anteriores, dados_novos, ip, user_agent, request_id) VALUES (?, ?, ?, 'RESERVA', ?, ?, ?, ?, ?, ?)`, [empresaId, actorId, action, String(entityId), before ? JSON.stringify(before) : null, after ? JSON.stringify(after) : null, requestContext.ip || null, requestContext.userAgent || null, requestContext.requestId || null]);
 }
 
+const reservationSelect = `SELECT r.*, v.codigo_interno, v.placa, v.marca, v.modelo,
+  s.nome AS solicitante_nome, s.unidade_id AS solicitante_unidade_id, s.departamento_id AS solicitante_departamento_id,
+  m.nome AS motorista_nome, cc.codigo AS centro_custo_codigo, cc.nome AS centro_custo_nome
+  FROM reservas r
+  JOIN veiculos v ON v.empresa_id=r.empresa_id AND v.id=r.veiculo_id
+  JOIN usuarios s ON s.empresa_id=r.empresa_id AND s.id=r.solicitante_id
+  JOIN usuarios m ON m.empresa_id=r.empresa_id AND m.id=r.motorista_id
+  LEFT JOIN centros_custo cc ON cc.empresa_id=r.empresa_id AND cc.id=r.centro_custo_id`;
+
 export async function findReservationById(empresaId, id) {
-  const [rows] = await pool.execute(`SELECT r.*, v.codigo_interno, v.placa, v.marca, v.modelo, s.nome AS solicitante_nome, m.nome AS motorista_nome, cc.codigo AS centro_custo_codigo, cc.nome AS centro_custo_nome FROM reservas r JOIN veiculos v ON v.empresa_id=r.empresa_id AND v.id=r.veiculo_id JOIN usuarios s ON s.empresa_id=r.empresa_id AND s.id=r.solicitante_id JOIN usuarios m ON m.empresa_id=r.empresa_id AND m.id=r.motorista_id LEFT JOIN centros_custo cc ON cc.empresa_id=r.empresa_id AND cc.id=r.centro_custo_id WHERE r.empresa_id=? AND r.id=? LIMIT 1`, [empresaId, id]);
+  const [rows] = await pool.execute(`${reservationSelect} WHERE r.empresa_id=? AND r.id=? LIMIT 1`, [empresaId, id]);
   if (!rows[0]) return null;
   return attachDestinations(empresaId, rows[0]);
 }
 
-export async function listReservations(empresaId, { requesterId = null, limit = 200 } = {}) {
+export async function canUserViewTeamReservation(empresaId, actorId, reservationId) {
+  const [rows] = await pool.execute(`
+    SELECT 1
+      FROM reservas r
+      JOIN usuarios actor ON actor.empresa_id = r.empresa_id AND actor.id = ? AND actor.ativo = TRUE
+      JOIN usuarios owner ON owner.empresa_id = r.empresa_id AND owner.id = r.solicitante_id
+     WHERE r.empresa_id = ? AND r.id = ?
+       AND (
+         (actor.departamento_id IS NOT NULL AND owner.departamento_id = actor.departamento_id)
+         OR
+         (actor.departamento_id IS NULL AND actor.unidade_id IS NOT NULL AND owner.unidade_id = actor.unidade_id)
+       )
+     LIMIT 1
+  `, [actorId, empresaId, reservationId]);
+  return rows.length > 0;
+}
+
+export async function listReservations(empresaId, { requesterId = null, teamActorId = null, limit = 200 } = {}) {
   const safeLimit = Math.min(Math.max(Number(limit) || 200, 1), 500);
-  const params = [empresaId];
-  let requesterClause = '';
-  if (requesterId) { requesterClause = ' AND r.solicitante_id = ?'; params.push(requesterId); }
-  const [rows] = await pool.execute(`SELECT r.*, v.codigo_interno, v.placa, v.marca, v.modelo, s.nome AS solicitante_nome, m.nome AS motorista_nome, cc.codigo AS centro_custo_codigo, cc.nome AS centro_custo_nome FROM reservas r JOIN veiculos v ON v.empresa_id=r.empresa_id AND v.id=r.veiculo_id JOIN usuarios s ON s.empresa_id=r.empresa_id AND s.id=r.solicitante_id JOIN usuarios m ON m.empresa_id=r.empresa_id AND m.id=r.motorista_id LEFT JOIN centros_custo cc ON cc.empresa_id=r.empresa_id AND cc.id=r.centro_custo_id WHERE r.empresa_id=?${requesterClause} ORDER BY r.data_hora_inicio DESC LIMIT ${safeLimit}`, params);
+  const params = [];
+  let teamJoin = '';
+  let scopeClause = '';
+  if (teamActorId) {
+    teamJoin = ' JOIN usuarios actor ON actor.empresa_id=r.empresa_id AND actor.id=? AND actor.ativo=TRUE';
+    params.push(teamActorId);
+    scopeClause = ` AND ((actor.departamento_id IS NOT NULL AND s.departamento_id=actor.departamento_id) OR (actor.departamento_id IS NULL AND actor.unidade_id IS NOT NULL AND s.unidade_id=actor.unidade_id))`;
+  }
+  params.push(empresaId);
+  if (requesterId) { scopeClause += ' AND r.solicitante_id = ?'; params.push(requesterId); }
+
+  const [rows] = await pool.execute(`${reservationSelect}${teamJoin} WHERE r.empresa_id=?${scopeClause} ORDER BY r.data_hora_inicio DESC LIMIT ${safeLimit}`, params);
   if (!rows.length) return [];
   const ids = rows.map((row) => row.id);
   const placeholders = ids.map(() => '?').join(',');

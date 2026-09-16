@@ -10,15 +10,19 @@ function positiveId(value, name) {
 }
 
 export function normalizeReservationPayload(body, settings = {}) {
-  const inicio = parseInstant(body.dataHoraInicio, 'dataHoraInicio', { enforceHalfHour: true });
-  const fim = parseInstant(body.dataHoraFim, 'dataHoraFim', { enforceHalfHour: true });
+  const options = {
+    intervalMinutes: Number(settings.intervalo_reserva_minutos || 30),
+    timeZone: settings.timezone || 'UTC',
+  };
+  const inicio = parseInstant(body.dataHoraInicio, 'dataHoraInicio', options);
+  const fim = parseInstant(body.dataHoraFim, 'dataHoraFim', options);
   if (fim.ms <= inicio.ms) throw new ApiError(422, 'PERIODO_INVALIDO', 'O retorno deve ser posterior à saída.');
 
-  const maxDestinations = Math.min(Number(settings.max_destinos || 10), 10);
+  const maxDestinations = Math.min(Math.max(Number(settings.max_destinos || 10), 1), 10);
   if (!validateDestinationCount(body.destinos, maxDestinations)) throw new ApiError(422, 'DESTINOS_INVALIDOS', `Informe entre 1 e ${maxDestinations} destinos.`);
 
   const destinos = body.destinos.map((item, index) => ({
-    codigoIbge: positiveId(item.codigoIbge ?? item.cidadeId, `destinos[${index}].codigoIbge`),
+    codigoIbge: positiveId(item.codigoIbge, `destinos[${index}].codigoIbge`),
     ordem: index + 1,
   }));
 
