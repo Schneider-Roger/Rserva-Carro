@@ -1,7 +1,16 @@
-import { AlertTriangle, CarFront, FileWarning, Fuel, Gauge, ReceiptText, ShieldAlert, Wrench } from 'lucide-react';
+import { AlertTriangle, Building2, CarFront, FileText, FileWarning, Fuel, Gauge, ReceiptText, ShieldAlert, Wrench } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { mockVehicles } from '../data/mockData.js';
 
 const money = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
+const modules = [
+  { to: '/gestao/abastecimentos', title: 'Abastecimentos', description: 'Litros, valor, KM, motorista e centro de custo.', icon: Fuel },
+  { to: '/gestao/centros-custo', title: 'Centros de custo', description: 'Rateio e análise por área responsável.', icon: Building2 },
+  { to: '/gestao/manutencoes', title: 'Manutenção preventiva', description: 'Alertas por KM e por data.', icon: Wrench },
+  { to: '/gestao/documentos', title: 'Documentos', description: 'Veículos, CNH e vencimentos.', icon: FileText },
+  { to: '/gestao/multas', title: 'Multas', description: 'Responsabilidade, vencimento e histórico.', icon: AlertTriangle },
+];
 
 export function ManagementDashboardPage() {
   const summary = {
@@ -13,48 +22,11 @@ export function ManagementDashboardPage() {
   const costKm = total / summary.month.km;
 
   return (
-    <div className="page-stack">
-      <div className="page-heading">
-        <span className="eyebrow">Gestão executiva</span>
-        <h1>Visão da frota</h1>
-        <p>Indicadores de uso, custos e vencimentos para tomada de decisão sem depender de hardware instalado.</p>
-      </div>
-
-      <div className="admin-metrics">
-        <article className="admin-metric"><span><CarFront size={21}/></span><div><strong>{summary.fleet.total}</strong><small>Veículos</small></div></article>
-        <article className="admin-metric"><span><Gauge size={21}/></span><div><strong>{summary.month.km.toLocaleString('pt-BR')}</strong><small>KM no mês</small></div></article>
-        <article className="admin-metric"><span><ReceiptText size={21}/></span><div><strong>{money(total)}</strong><small>Custo no mês</small></div></article>
-        <article className="admin-metric"><span><Fuel size={21}/></span><div><strong>{money(costKm)}</strong><small>Custo por KM</small></div></article>
-      </div>
-
-      <div className="dashboard-grid">
-        <section className="section-card">
-          <div className="section-heading"><div><span className="eyebrow">Custos</span><h2>Composição mensal</h2></div></div>
-          <div className="movement-list">
-            <div className="movement-row"><div className="movement-time reservation"><Fuel size={16}/></div><div><strong>Combustível</strong><span>Abastecimentos registrados</span></div><small>{money(summary.month.fuel)}</small></div>
-            <div className="movement-row"><div className="movement-time blocked"><Wrench size={16}/></div><div><strong>Manutenção</strong><span>Serviços e peças</span></div><small>{money(summary.month.maintenance)}</small></div>
-            <div className="movement-row"><div className="movement-time"><ReceiptText size={16}/></div><div><strong>Outros custos</strong><span>Pedágio, lavagem, seguro e demais despesas</span></div><small>{money(summary.month.other)}</small></div>
-          </div>
-        </section>
-
-        <section className="section-card">
-          <div className="section-heading"><div><span className="eyebrow">Alertas</span><h2>Atenção necessária</h2></div></div>
-          <div className="movement-list">
-            <div className="movement-row"><div className="movement-time blocked"><Wrench size={16}/></div><div><strong>Manutenções próximas</strong><span>Por data ou quilometragem</span></div><small>{summary.alerts.maintenance}</small></div>
-            <div className="movement-row"><div className="movement-time blocked"><FileWarning size={16}/></div><div><strong>Documentos a vencer</strong><span>Veículos e motoristas</span></div><small>{summary.alerts.documents}</small></div>
-            <div className="movement-row"><div className="movement-time blocked"><ShieldAlert size={16}/></div><div><strong>Multas pendentes</strong><span>Responsabilidade e vencimento</span></div><small>{summary.alerts.fines}</small></div>
-          </div>
-        </section>
-      </div>
-
-      <section className="section-card">
-        <div className="section-heading"><div><span className="eyebrow">Módulos V2</span><h2>Gestão financeira e preventiva</h2></div></div>
-        <div className="quick-grid">
-          <div className="quick-card"><span className="quick-icon"><Fuel/></span><div><strong>Abastecimentos</strong><p>Litros, valor, KM, motorista e centro de custo.</p></div></div>
-          <div className="quick-card"><span className="quick-icon"><Wrench/></span><div><strong>Manutenção preventiva</strong><p>Alertas por KM e por data.</p></div></div>
-          <div className="quick-card"><span className="quick-icon"><AlertTriangle/></span><div><strong>Documentos e multas</strong><p>Vencimentos, responsabilidade e histórico.</p></div></div>
-        </div>
-      </section>
+    <div className="page-stack management-page">
+      <div className="page-heading"><span className="eyebrow">Gestão executiva</span><h1>Visão da frota</h1><p>Indicadores de uso, custos e vencimentos para tomada de decisão sem depender de hardware instalado.</p></div>
+      <div className="admin-metrics"><article className="admin-metric"><span><CarFront size={21}/></span><div><strong>{summary.fleet.total}</strong><small>Veículos</small></div></article><article className="admin-metric"><span><Gauge size={21}/></span><div><strong>{summary.month.km.toLocaleString('pt-BR')}</strong><small>KM no mês</small></div></article><article className="admin-metric"><span><ReceiptText size={21}/></span><div><strong>{money(total)}</strong><small>Custo no mês</small></div></article><article className="admin-metric"><span><Fuel size={21}/></span><div><strong>{money(costKm)}</strong><small>Custo por KM</small></div></article></div>
+      <div className="dashboard-grid"><section className="section-card"><div className="section-heading"><div><span className="eyebrow">Custos</span><h2>Composição mensal</h2></div></div><div className="movement-list"><div className="movement-row"><div className="movement-time reservation"><Fuel size={16}/></div><div><strong>Combustível</strong><span>Abastecimentos registrados</span></div><small>{money(summary.month.fuel)}</small></div><div className="movement-row"><div className="movement-time blocked"><Wrench size={16}/></div><div><strong>Manutenção</strong><span>Serviços e peças</span></div><small>{money(summary.month.maintenance)}</small></div><div className="movement-row"><div className="movement-time"><ReceiptText size={16}/></div><div><strong>Outros custos</strong><span>Pedágio, lavagem, seguro e demais despesas</span></div><small>{money(summary.month.other)}</small></div></div></section><section className="section-card"><div className="section-heading"><div><span className="eyebrow">Alertas</span><h2>Atenção necessária</h2></div></div><div className="movement-list"><div className="movement-row"><div className="movement-time blocked"><Wrench size={16}/></div><div><strong>Manutenções próximas</strong><span>Por data ou quilometragem</span></div><small>{summary.alerts.maintenance}</small></div><div className="movement-row"><div className="movement-time blocked"><FileWarning size={16}/></div><div><strong>Documentos a vencer</strong><span>Veículos e motoristas</span></div><small>{summary.alerts.documents}</small></div><div className="movement-row"><div className="movement-time blocked"><ShieldAlert size={16}/></div><div><strong>Multas pendentes</strong><span>Responsabilidade e vencimento</span></div><small>{summary.alerts.fines}</small></div></div></section></div>
+      <section className="section-card"><div className="section-heading"><div><span className="eyebrow">Módulos de gestão</span><h2>Financeiro e preventivo</h2></div></div><div className="management-module-grid">{modules.map(({ to, title, description, icon: Icon }) => <Link className="management-module-card" to={to} key={to}><span><Icon size={21}/></span><div><strong>{title}</strong><p>{description}</p></div><b>→</b></Link>)}</div></section>
     </div>
   );
 }
