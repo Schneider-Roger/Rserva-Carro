@@ -1,0 +1,6 @@
+export const managementCostCenters=[{id:1,code:'TI',name:'Tecnologia da Informação',description:'Deslocamentos de TI',active:true},{id:2,code:'ADM',name:'Administrativo',description:'Deslocamentos administrativos',active:true}];
+export const managementFuelings=[{id:1,date:'2026-09-12',vehicle:'Fiat Strada',code:'DIS401',plate:'ABC1D23',driver:'Roger Schneider',costCenter:'TI',fuel:'ETANOL',liters:42.3,total:169.2,km:45190,station:'Posto Demonstração'}];
+export const managementMaintenancePlans=[{id:1,vehicle:'Fiat Strada',code:'DIS401',vehicleId:12,name:'Revisão periódica',currentKm:45382,nextKm:50000,nextDate:'2026-11-15',status:'EM_DIA'}];
+export const managementVehicleDocuments=[{id:1,ownerId:12,owner:'Fiat Strada · DIS401',type:'Licenciamento',number:'DOC-001',expiresAt:'2027-03-31',status:'EM_DIA'}];
+export const managementDriverDocuments=[{id:1,ownerId:25,owner:'Roger Schneider',type:'CNH B',number:'CNH-001',expiresAt:'2027-05-15',status:'EM_DIA'}];
+export const managementFines=[{id:1,notice:'AI-001',date:'2026-08-20',vehicle:'Fiat Mobi · MOB203',vehicleId:14,driver:'Carlos Silva',driverId:31,description:'Excesso de velocidade',value:130.16,points:4,dueAt:'2026-10-15',status:'PENDENTE'}];

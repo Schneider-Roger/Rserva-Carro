@@ -1,0 +1,2 @@
+const labels = { ATIVO:'Ativo', INATIVO:'Inativo', EM_DIA:'Em dia', A_VENCER:'A vencer', VENCIDO:'Vencido', ATRASADA:'Atrasada', PROXIMO:'Próximo', PENDENTE:'Pendente', EM_TRATAMENTO:'Em tratamento', RECURSO:'Recurso', PAGA:'Paga', CANCELADA:'Cancelada' };
+export function ModuleStatusPill({ status }) { return <span className={`module-status status-${String(status || '').toLowerCase()}`}>{labels[status] || status}</span>; }

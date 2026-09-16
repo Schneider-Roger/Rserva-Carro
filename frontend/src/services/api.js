@@ -1,28 +1,15 @@
-import { mockReservations, mockVehicles } from '../data/mockData.js';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-export const isMockMode = String(import.meta.env.VITE_USE_MOCKS ?? 'true').toLowerCase() === 'true';
-
-async function request(path, options = {}) {
-  const response = await fetch(`${API_URL}${path}`, { headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }, credentials: 'include', ...options });
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(payload?.error?.message || 'Não foi possível concluir a operação.');
-  return payload?.data ?? payload;
-}
-
-function localInstant(date, time) { return new Date(`${date}T${time}:00`).toISOString(); }
-
-export async function getAvailableVehicles({ date, start, end }) {
-  if (isMockMode) { await new Promise((resolve) => setTimeout(resolve, 350)); return mockVehicles; }
-  const params = new URLSearchParams({ inicio: localInstant(date, start), fim: localInstant(date, end) });
-  return request(`/veiculos/disponiveis?${params}`);
-}
-
-export async function createReservation(data) {
-  if (isMockMode) { await new Promise((resolve) => setTimeout(resolve, 450)); return { id: 145, status: 'CONFIRMADA', ...data }; }
-  return request('/reservas', { method: 'POST', body: JSON.stringify(data) });
-}
-
-export async function getMyReservations() { if (isMockMode) return mockReservations; return request('/reservas/minhas'); }
-export async function cancelReservation(id, motivo = null) { return request(`/reservas/${id}/cancelamento`, { method: 'POST', body: JSON.stringify({ motivo }) }); }
-export { localInstant };
+import { mockReservations, mockVehicles, mockUsers, states, cities, currentUser } from '../data/mockData.js';
+const API_URL=import.meta.env.VITE_API_URL||'http://localhost:3001/api'; export const isMockMode=String(import.meta.env.VITE_USE_MOCKS??'true').toLowerCase()==='true';
+async function request(path,options={}){const response=await fetch(`${API_URL}${path}`,{headers:{'Content-Type':'application/json',...(options.headers||{})},credentials:'include',...options});const payload=await response.json().catch(()=>null);if(!response.ok){const e=new Error(payload?.error?.message||'Não foi possível concluir a operação.');e.code=payload?.error?.code;e.requestId=payload?.error?.requestId;throw e}return payload?.data??payload}
+function offsetFor(date,timeZone){const parts=new Intl.DateTimeFormat('en-US',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date);const get=(t)=>Number(parts.find(p=>p.type===t)?.value);return Date.UTC(get('year'),get('month')-1,get('day'),get('hour'),get('minute'),get('second'))-date.getTime()}
+export function zonedLocalInstant(date,time,timeZone='America/Sao_Paulo'){const[y,m,d]=date.split('-').map(Number);const[hh,mm]=time.split(':').map(Number);const wall=Date.UTC(y,m-1,d,hh,mm,0);let guess=wall-offsetFor(new Date(wall),timeZone);guess=wall-offsetFor(new Date(guess),timeZone);return new Date(guess).toISOString()}
+export async function getAppContext(){if(isMockMode)return{user:currentUser,settings:{timezone:'America/Sao_Paulo',reservationIntervalMinutes:30,maxDestinations:10,allowDifferentDriver:true,requireTicket:false,requireCostCenter:false},branding:{productName:'Frota Leve',primaryColor:'#0B6B3A',secondaryColor:'#0C2F21'}};return request('/contexto')}
+export async function getAvailableVehicles({startDate,startTime,endDate,endTime,timeZone}){if(isMockMode){await new Promise(r=>setTimeout(r,200));return mockVehicles}const params=new URLSearchParams({inicio:zonedLocalInstant(startDate,startTime,timeZone),fim:zonedLocalInstant(endDate,endTime,timeZone)});return request(`/veiculos/disponiveis?${params}`)}
+export async function createReservation(data){if(isMockMode){await new Promise(r=>setTimeout(r,250));return{id:145,status:'CONFIRMADA',...data}}return request('/reservas',{method:'POST',body:JSON.stringify(data)})}
+function mapReservation(x){if(x.vehicle)return x;const start=new Date(x.dataHoraInicio),end=new Date(x.dataHoraFim);return{id:x.id,vehicle:{id:x.veiculo.id,brand:x.veiculo.marca,model:x.veiculo.modelo,internalCode:x.veiculo.codigoInterno,plate:x.veiculo.placa},date:start.toISOString().slice(0,10),start:start.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),endDate:end.toISOString().slice(0,10),end:end.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}),destinations:x.destinos.map(d=>`${d.cidade} - ${d.uf}`),driver:x.motorista.nome,reason:x.motivo,status:x.status}}
+export async function getMyReservations(){if(isMockMode)return mockReservations;return(await request('/reservas/minhas')).map(mapReservation)}
+export async function cancelReservation(id,motivo=null){if(isMockMode)return{id,status:'CANCELADA'};return request(`/reservas/${id}/cancelamento`,{method:'POST',body:JSON.stringify({motivo})})}
+export async function getDrivers(){if(isMockMode)return mockUsers;return request('/motoristas')}
+export async function getCostCentersForReservation(){if(isMockMode)return[{id:1,codigo:'TI',nome:'Tecnologia da Informação'},{id:2,codigo:'ADM',nome:'Administrativo'}];return request('/centros-custo')}
+export async function getStates(){if(isMockMode)return states.map(s=>({id:s.id,uf:s.uf,name:s.name}));return request('/localidades/estados')}
+export async function getCities(stateId){if(isMockMode)return(cities[stateId]||[]).map(c=>({id:c.id,ibgeCode:c.id,name:c.name}));return request(`/localidades/estados/${stateId}/cidades`)}
