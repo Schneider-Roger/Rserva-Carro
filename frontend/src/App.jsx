@@ -6,6 +6,7 @@ import { MyReservationsPage } from './pages/MyReservationsPage.jsx';
 import { FleetAgendaPage } from './pages/FleetAgendaPage.jsx';
 import { PolicyPage } from './pages/PolicyPage.jsx';
 import { AdminDashboardPage } from './pages/AdminDashboardPage.jsx';
+import { OperationsPage } from './pages/OperationsPage.jsx';
 
 export function App() {
   return (
@@ -14,6 +15,7 @@ export function App() {
         <Route index element={<HomePage />} />
         <Route path="reservas/nova" element={<NewReservationPage />} />
         <Route path="reservas" element={<MyReservationsPage />} />
+        <Route path="operacao" element={<OperationsPage />} />
         <Route path="agenda" element={<FleetAgendaPage />} />
         <Route path="politica" element={<PolicyPage />} />
         <Route path="admin" element={<AdminDashboardPage />} />
