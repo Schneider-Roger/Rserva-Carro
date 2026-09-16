@@ -1,0 +1,2 @@
+import { Router } from 'express';import * as c from '../controllers/operation.controller.js';import { requirePermission } from '../middlewares/authz.middleware.js';
+export const operationRouter=Router();operationRouter.get('/reservas-disponiveis',requirePermission('OPERACAO_EXECUTAR','OPERACAO_GERENCIAR'),c.available);operationRouter.post('/retirada',requirePermission('OPERACAO_EXECUTAR','OPERACAO_GERENCIAR'),c.withdraw);operationRouter.post('/:id/devolucao',requirePermission('OPERACAO_EXECUTAR','OPERACAO_GERENCIAR'),c.returnVehicle);

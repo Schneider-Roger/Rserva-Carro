@@ -1,17 +1,2 @@
-import { Router } from 'express';
-import { vehicleRouter } from './vehicle.routes.js';
-import { managementRouter } from './management.routes.js';
-import { managementCrudRouter } from './managementCrud.routes.js';
-import { directoryRouter } from './directory.routes.js';
-import { reservationRouter } from './reservation.routes.js';
-import { contextRouter } from './context.routes.js';
-import { locationRouter } from './location.routes.js';
-
-export const apiRouter = Router();
-apiRouter.use('/contexto', contextRouter);
-apiRouter.use('/localidades', locationRouter);
-apiRouter.use('/veiculos', vehicleRouter);
-apiRouter.use('/reservas', reservationRouter);
-apiRouter.use('/gestao', managementRouter);
-apiRouter.use('/', directoryRouter);
-apiRouter.use('/', managementCrudRouter);
+import { Router } from 'express';import { vehicleRouter } from './vehicle.routes.js';import { managementRouter } from './management.routes.js';import { managementCrudRouter } from './managementCrud.routes.js';import { directoryRouter } from './directory.routes.js';import { reservationRouter } from './reservation.routes.js';import { contextRouter } from './context.routes.js';import { locationRouter } from './location.routes.js';import { operationRouter } from './operation.routes.js';
+export const apiRouter=Router();apiRouter.use('/contexto',contextRouter);apiRouter.use('/localidades',locationRouter);apiRouter.use('/veiculos',vehicleRouter);apiRouter.use('/reservas',reservationRouter);apiRouter.use('/operacoes',operationRouter);apiRouter.use('/gestao',managementRouter);apiRouter.use('/',directoryRouter);apiRouter.use('/',managementCrudRouter);
