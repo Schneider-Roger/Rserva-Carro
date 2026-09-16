@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main, feature/saas-operacao-frota]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install
+      - run: npm run ci
+        env:
+          NODE_ENV: test
+          DB_HOST: 127.0.0.1
+          DB_USER: ci
+          DB_NAME: frota_leve
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install
+      - run: npm run build
+        env:
+          VITE_USE_MOCKS: true

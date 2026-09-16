@@ -12,7 +12,7 @@ export const pool = mysql.createPool({
   queueLimit: 0,
   charset: 'utf8mb4',
   dateStrings: true,
-  timezone: 'local',
+  timezone: 'Z',
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
 });
