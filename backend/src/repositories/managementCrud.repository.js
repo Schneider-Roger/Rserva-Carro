@@ -24,9 +24,8 @@ export async function insertCostCenter(connection, empresaId, data) {
 
 export async function updateCostCenter(connection, empresaId, id, data) {
   const [result] = await connection.execute(`
-    UPDATE centros_custo
-       SET codigo = ?, nome = ?, descricao = ?
-     WHERE empresa_id = ? AND id = ?
+    UPDATE centros_custo SET codigo = ?, nome = ?, descricao = ?
+    WHERE empresa_id = ? AND id = ?
   `, [data.codigo, data.nome, data.descricao, empresaId, id]);
   return result.affectedRows;
 }
@@ -71,11 +70,7 @@ export async function insertFueling(connection, empresaId, userId, data) {
 }
 
 export async function updateVehicleKmIfHigher(connection, empresaId, vehicleId, km) {
-  await connection.execute(`
-    UPDATE veiculos
-       SET km_atual = GREATEST(km_atual, ?)
-     WHERE empresa_id = ? AND id = ?
-  `, [km, empresaId, vehicleId]);
+  await connection.execute(`UPDATE veiculos SET km_atual = GREATEST(km_atual, ?) WHERE empresa_id = ? AND id = ?`, [km, empresaId, vehicleId]);
 }
 
 export async function cancelFueling(connection, empresaId, id, userId, reason) {
@@ -134,17 +129,20 @@ export async function setMaintenancePlanActive(connection, empresaId, id, active
 }
 
 export async function listDocuments(empresaId, type = 'VEICULO') {
-  const table = type === 'USUARIO' ? 'documentos_usuario' : 'documentos_veiculo';
-  const ownerJoin = type === 'USUARIO'
+  const isUser = type === 'USUARIO';
+  const table = isUser ? 'documentos_usuario' : 'documentos_veiculo';
+  const ownerJoin = isUser
     ? `JOIN usuarios o ON o.empresa_id = d.empresa_id AND o.id = d.usuario_id`
     : `JOIN veiculos o ON o.empresa_id = d.empresa_id AND o.id = d.veiculo_id`;
-  const ownerSelect = type === 'USUARIO'
-    ? `o.id AS owner_id, o.nome AS owner_nome`
+  const ownerSelect = isUser
+    ? `o.id AS owner_id, o.nome AS owner_nome, NULL AS codigo_interno, NULL AS placa`
     : `o.id AS owner_id, CONCAT(o.marca, ' ', o.modelo) AS owner_nome, o.codigo_interno, o.placa`;
+  const categorySelect = isUser ? 'd.categoria AS categoria' : 'NULL AS categoria';
+  const observationSelect = isUser ? 'NULL AS observacao' : 'd.observacao AS observacao';
 
   const [rows] = await pool.execute(`
-    SELECT d.id, d.tipo, d.numero, d.categoria, d.emissao_em, d.validade_em, d.alerta_dias,
-           d.arquivo_url, d.status, ${ownerSelect}
+    SELECT d.id, d.tipo, d.numero, ${categorySelect}, d.emissao_em, d.validade_em, d.alerta_dias,
+           d.arquivo_url, ${observationSelect}, d.status, ${ownerSelect}
       FROM ${table} d
       ${ownerJoin}
      WHERE d.empresa_id = ? AND d.status <> 'CANCELADO'
@@ -161,7 +159,6 @@ export async function insertDocument(connection, empresaId, userId, type, data) 
     `, [empresaId, data.ownerId, data.tipo, data.numero, data.categoria, data.emissaoEm, data.validadeEm, data.alertaDias, data.arquivoUrl, userId]);
     return result.insertId;
   }
-
   const [result] = await connection.execute(`
     INSERT INTO documentos_veiculo (empresa_id, veiculo_id, tipo, numero, emissao_em, validade_em, alerta_dias, arquivo_url, observacao, status, criado_por_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ATIVO', ?)
