@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { AlertTriangle, BarChart3, Bell, Building2, CalendarDays, CarFront, ClipboardCheck, FileText, Fuel, Home, LayoutDashboard, Menu, PlusCircle, ShieldCheck, Wrench, X } from 'lucide-react';
+import { BarChart3, Bell, CalendarDays, CarFront, ClipboardCheck, Home, LayoutDashboard, Menu, PlusCircle, ShieldCheck, X } from 'lucide-react';
 import { currentUser } from '../data/mockData.js';
 import { isMockMode } from '../services/api.js';
 
@@ -11,15 +11,6 @@ const navItems = [
   { to: '/operacao', label: 'Retirada / devolução', icon: ClipboardCheck },
   { to: '/agenda', label: 'Agenda da frota', icon: CarFront },
   { to: '/politica', label: 'Política de uso', icon: ShieldCheck },
-];
-
-const managementItems = [
-  { to: '/gestao', label: 'Visão executiva', icon: BarChart3, end: true },
-  { to: '/gestao/abastecimentos', label: 'Abastecimentos', icon: Fuel },
-  { to: '/gestao/centros-custo', label: 'Centros de custo', icon: Building2 },
-  { to: '/gestao/manutencoes', label: 'Manutenção preventiva', icon: Wrench },
-  { to: '/gestao/documentos', label: 'Documentos', icon: FileText },
-  { to: '/gestao/multas', label: 'Multas', icon: AlertTriangle },
 ];
 
 export function AppShell() {
@@ -45,15 +36,10 @@ export function AppShell() {
           {isAdmin && <>
             <span className="nav-section-label admin-label">Administração</span>
             <NavLink to="/admin" onClick={() => setOpen(false)} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}><LayoutDashboard size={19}/><span>Operação</span></NavLink>
-            <span className="nav-section-label admin-label">Gestão da frota</span>
-            {managementItems.map(({ to, label, icon: Icon, end }) => (
-              <NavLink key={to} to={to} end={end} onClick={() => setOpen(false)} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-                <Icon size={19}/><span>{label}</span>
-              </NavLink>
-            ))}
+            <NavLink to="/gestao" onClick={() => setOpen(false)} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}><BarChart3 size={19}/><span>Gestão executiva</span></NavLink>
           </>}
         </nav>
-        <div className="sidebar-footer">Versão 0.4 · Produto SaaS</div>
+        <div className="sidebar-footer">Versão 0.3 · Produto SaaS</div>
       </aside>
       <div className="app-column">
         <header className="topbar">

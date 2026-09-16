@@ -19,6 +19,7 @@ export const env = Object.freeze({
   appTimezone,
   corsOrigin: process.env.CORS_ORIGIN?.trim() || 'http://localhost:5173',
   devEmpresaId: toPositiveInteger(process.env.DEV_EMPRESA_ID, 1, 'DEV_EMPRESA_ID'),
+  devUserId: toPositiveInteger(process.env.DEV_USER_ID, 1, 'DEV_USER_ID'),
   db: Object.freeze({
     host: process.env.DB_HOST.trim(),
     port: toPositiveInteger(process.env.DB_PORT, 3306, 'DB_PORT'),
