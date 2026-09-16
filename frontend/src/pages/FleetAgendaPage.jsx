@@ -1,0 +1,11 @@
+import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { agendaRows } from '../data/mockData.js';
+
+const hours = ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18'];
+const toMinutes = (time) => { const [h, m] = time.split(':').map(Number); return h * 60 + m; };
+const dayStart = 8 * 60;
+const daySpan = 10 * 60;
+
+export function FleetAgendaPage() {
+  return <div className="page-stack"><div className="page-heading"><span className="eyebrow">Disponibilidade</span><h1>Agenda da frota</h1><p>Visualização compacta por veículo, sem uma linha separada para cada hora.</p></div><section className="section-card agenda-card"><div className="agenda-toolbar"><div className="date-nav"><button className="icon-button"><ChevronLeft size={19} /></button><div><strong>Quarta-feira, 16 de setembro</strong><span>Visão diária</span></div><button className="icon-button"><ChevronRight size={19} /></button></div><button className="button secondary small">Hoje</button></div><div className="legend"><span><i className="legend-dot reservation" /> Reserva</span><span><i className="legend-dot blocked" /> Manutenção / bloqueio</span><span><Info size={16} /> Horários ilustrativos no modo demonstração</span></div><div className="agenda-scroll"><div className="agenda-grid"><div className="agenda-head vehicle-col">Veículo</div><div className="agenda-head hours-head">{hours.map((hour) => <span key={hour}>{hour}:00</span>)}</div>{agendaRows.map((row) => <div className="agenda-row" key={row.vehicle.id}><div className="agenda-vehicle"><strong>{row.vehicle.model}</strong><span>{row.vehicle.internalCode} · {row.vehicle.plate}</span></div><div className="timeline">{hours.map((hour) => <i className="time-line" key={hour} />)}{row.blocks.map((block, index) => { const left = Math.max(0, ((toMinutes(block.start) - dayStart) / daySpan) * 100); const width = Math.min(100 - left, ((toMinutes(block.end) - toMinutes(block.start)) / daySpan) * 100); return <div key={index} className={`timeline-block ${block.type}`} style={{ left: `${left}%`, width: `${width}%` }} title={`${block.start}–${block.end} · ${block.label}`}><b>{block.start}–{block.end}</b><span>{block.label}</span></div>; })}</div></div>)}</div></div></section></div>;
+}

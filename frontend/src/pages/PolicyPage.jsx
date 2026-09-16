@@ -1,0 +1,5 @@
+import { AlertTriangle, CheckCircle2, ShieldCheck } from 'lucide-react';
+
+export function PolicyPage() {
+  return <div className="page-stack narrow-page"><div className="page-heading"><span className="eyebrow">Orientações</span><h1>Política de uso</h1><p>Espaço preparado para a política oficial de utilização dos veículos corporativos.</p></div><section className="section-card prose-card"><div className="policy-icon"><ShieldCheck /></div><h2>Antes de reservar</h2><p>Use a reserva apenas para deslocamentos corporativos autorizados e informe um período compatível com a duração prevista da viagem.</p><h2>Responsabilidade do motorista</h2><ul><li><CheckCircle2 size={17} /> Conferir as condições do veículo antes da saída.</li><li><CheckCircle2 size={17} /> Respeitar as regras internas e a legislação de trânsito.</li><li><CheckCircle2 size={17} /> Informar qualquer ocorrência à equipe responsável pela frota.</li></ul><div className="policy-warning"><AlertTriangle size={20} /><div><strong>Conteúdo provisório</strong><p>Substituir esta seção pelo documento oficial da empresa antes da publicação em produção.</p></div></div></section></div>;
+}
