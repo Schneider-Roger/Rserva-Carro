@@ -1,84 +1,31 @@
 # Frota Leve — Modelo de Dados SaaS
 
-## Banco
+MySQL 8+, database `frota_leve`. O produto usa schema compartilhado multi-tenant: tabelas operacionais carregam `empresa_id`, e FKs compostas impedem referências cruzadas entre clientes.
 
-MySQL 8+, database `frota_leve`.
+## Instalação limpa
 
-## Isolamento multiempresa
-
-O sistema é multi-tenant. Toda tabela operacional contém `empresa_id` e os relacionamentos críticos usam foreign keys compostas `(empresa_id, id)`. Isso reduz o risco de uma reserva, operação ou custo apontar para um recurso pertencente a outro cliente.
-
-O backend nunca usa `empresa_id` enviado pelo frontend como fonte de autorização; o tenant é resolvido a partir da identidade autenticada.
-
-## Control plane
-
-- `empresas`
-- `empresa_configuracoes`
-- `empresa_branding`
-- `planos`
-- `assinaturas`
-- `usuarios_plataforma`
-- `auditoria_plataforma`
-
-## Núcleo operacional
-
-- `unidades`
-- `departamentos`
-- `usuarios`
-- `perfis`
-- `permissoes`
-- `usuario_perfis`
-- `perfil_permissoes`
-- `categorias_veiculo`
-- `veiculos`
-- `reservas`
-- `reserva_destinos`
-- `manutencoes`
-- `bloqueios_veiculo`
-- `auditoria`
-
-## V1.5 — retirada/devolução
-
-Criada em `database/migrations/002_operations.sql`:
-
-- `chaves_veiculo`
-- `operacoes_veiculo`
-- `checklist_modelos`
-- `checklist_itens`
-- `operacao_checklist_respostas`
-- `avarias`
-- `custodia_chaves`
-
-## V2 — gestão financeira/preventiva
-
-Criada em `database/migrations/003_management.sql`:
-
-- `centros_custo`
-- `planos_manutencao`
-- `abastecimentos`
-- `custos_veiculo`
-- `documentos_veiculo`
-- `documentos_usuario`
-- `multas`
-
-A migration também adiciona centro de custo à reserva, KM atual ao veículo e custo/plano preventivo à manutenção.
-
-## Índices críticos
+Execute exatamente nesta ordem, sem correções manuais no Workbench:
 
 ```text
-reservas(empresa_id, veiculo_id, data_hora_inicio, data_hora_fim)
-bloqueios_veiculo(empresa_id, veiculo_id, data_hora_inicio, data_hora_fim, ativo)
-operacoes_veiculo(empresa_id, veiculo_id, status)
-abastecimentos(empresa_id, veiculo_id, data_hora)
-planos_manutencao(empresa_id, ativo, proxima_data, proximo_km)
-documentos_veiculo(empresa_id, status, validade_em)
-multas(empresa_id, status, vencimento_em)
+1. database/schema.sql
+2. database/migrations/002_operations.sql
+3. database/migrations/003_management.sql
+4. database/migrations/004_api_safety.sql
+5. database/migrations/005_integrity_hardening.sql
+6. database/seed-development.sql   # somente desenvolvimento
+7. carga oficial completa de municípios do IBGE # produção
 ```
 
-## Ordem de instalação local
+A migration `005` fecha as inconsistências encontradas na auditoria: departamento precisa pertencer à unidade do usuário, destinos operacionais deixam de usar cascade, manutenção passa a exigir previsão de fim, bloqueio de manutenção fica amarrado ao mesmo veículo e entram permissões de operação/centro de custo.
 
-1. `database/schema.sql`
-2. `database/migrations/002_operations.sql`
-3. `database/migrations/003_management.sql`
-4. `database/seed-development.sql`
-5. carga oficial de municípios do IBGE, quando o importador estiver pronto.
+## Tempo
+
+Datetimes operacionais são tratados em UTC pela API e pela conexão MySQL. `empresa_configuracoes.timezone` define a interpretação e exibição de horários para cada tenant.
+
+## Hodômetro
+
+`veiculos.km_atual` é atualizado na devolução da operação do veículo. Abastecimento não altera automaticamente o hodômetro, evitando que um lançamento digitado incorretamente contamine alertas de manutenção preventiva.
+
+## Auditoria
+
+Reservas, retirada/devolução e mutações dos módulos de gestão gravam `auditoria` com tenant, ator, ação, entidade, request ID, IP e user-agent.
