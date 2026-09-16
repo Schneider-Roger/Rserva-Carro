@@ -3,16 +3,12 @@ import { parseAvailabilityQuery } from '../validators/availability.validator.js'
 
 export async function getAvailableVehicles(req, res) {
   const period = parseAvailabilityQuery(req.query);
-  const data = await listAvailableVehicles(period);
+  const data = await listAvailableVehicles(req.tenant.empresaId, period);
 
   return res.status(200).json({
     success: true,
     data,
     message: null,
-    meta: {
-      inicio: period.inicioIso,
-      fim: period.fimIso,
-      total: data.length,
-    },
+    meta: { inicio: period.inicioIso, fim: period.fimIso, total: data.length },
   });
 }

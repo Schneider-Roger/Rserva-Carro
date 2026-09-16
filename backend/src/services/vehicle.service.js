@@ -1,8 +1,7 @@
 import { findAvailableVehicles } from '../repositories/vehicle.repository.js';
 
-export async function listAvailableVehicles(period) {
-  const rows = await findAvailableVehicles(period);
-
+export async function listAvailableVehicles(empresaId, period) {
+  const rows = await findAvailableVehicles({ empresaId, ...period });
   return rows.map((row) => ({
     id: row.id,
     codigoInterno: row.codigo_interno,
@@ -12,15 +11,7 @@ export async function listAvailableVehicles(period) {
     capacidade: row.capacidade,
     cor: row.cor,
     ano: row.ano,
-    categoria: {
-      id: row.categoria_id,
-      nome: row.categoria_nome,
-    },
-    unidade: row.unidade_id
-      ? {
-          id: row.unidade_id,
-          nome: row.unidade_nome,
-        }
-      : null,
+    categoria: { id: row.categoria_id, nome: row.categoria_nome },
+    unidade: row.unidade_id ? { id: row.unidade_id, nome: row.unidade_nome } : null,
   }));
 }
