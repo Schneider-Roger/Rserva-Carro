@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Bell, CalendarDays, CarFront, ClipboardCheck, Home, LayoutDashboard, Menu, PlusCircle, ShieldCheck, X } from 'lucide-react';
+import { BarChart3, Bell, CalendarDays, CarFront, ClipboardCheck, Home, LayoutDashboard, Menu, PlusCircle, ShieldCheck, X } from 'lucide-react';
 import { currentUser } from '../data/mockData.js';
 import { isMockMode } from '../services/api.js';
 
@@ -33,9 +33,13 @@ export function AppShell() {
               <Icon size={19} strokeWidth={1.9} /><span>{label}</span>
             </NavLink>
           ))}
-          {isAdmin && <><span className="nav-section-label admin-label">Administração</span><NavLink to="/admin" onClick={() => setOpen(false)} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}><LayoutDashboard size={19} strokeWidth={1.9}/><span>Dashboard</span></NavLink></>}
+          {isAdmin && <>
+            <span className="nav-section-label admin-label">Administração</span>
+            <NavLink to="/admin" onClick={() => setOpen(false)} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}><LayoutDashboard size={19}/><span>Operação</span></NavLink>
+            <NavLink to="/gestao" onClick={() => setOpen(false)} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}><BarChart3 size={19}/><span>Gestão executiva</span></NavLink>
+          </>}
         </nav>
-        <div className="sidebar-footer">Versão 0.2 · Produto SaaS</div>
+        <div className="sidebar-footer">Versão 0.3 · Produto SaaS</div>
       </aside>
       <div className="app-column">
         <header className="topbar">

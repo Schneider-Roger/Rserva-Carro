@@ -2,53 +2,72 @@
 
 ## Posicionamento
 
-O Frota Leve não compete como plataforma de hardware/telemetria. O posicionamento é gestão de frota compartilhada corporativa com implantação simples, sem hardware obrigatório e integração futura com rastreadores/telemetria existentes.
+O Frota Leve é uma plataforma de gestão de frota compartilhada corporativa. O produto não depende de hardware e poderá integrar GPS, telemetria e cartões de combustível de terceiros quando o cliente já possuir esses recursos.
 
 ## V1 — Reserva e governança
 
 - reservas por período;
 - múltiplos destinos;
-- agenda da frota;
+- agenda;
 - motorista/solicitante;
-- bloqueios e manutenção;
-- usuários, RBAC e auditoria;
+- bloqueios;
+- usuários e RBAC;
+- auditoria;
 - multiempresa;
 - white-label;
 - configurações por tenant.
 
-## V1.5 — Operação do veículo
+Status: fundação modelada e frontend navegável em modo demo.
 
-- retirada e devolução;
-- QR Code para identificar veículo/reserva;
-- quilometragem inicial/final;
-- nível de combustível na retirada/devolução;
-- checklist configurável;
-- fotos opcionais;
-- registro de avarias;
-- custódia de chaves;
-- ocorrências de viagem.
+## V1.5 — Operação
+
+- retirada/devolução;
+- QR Code;
+- KM inicial/final;
+- combustível;
+- checklist;
+- avarias;
+- custódia de chaves.
+
+Status: modelo de dados e protótipo funcional implementados na branch de produto.
 
 ## V2 — Gestão financeira e preventiva
 
-- abastecimentos;
-- custos por veículo;
 - centros de custo;
-- manutenção preventiva por km/data;
+- abastecimentos;
+- custos;
+- manutenção preventiva por KM/data;
 - documentos e vencimentos;
+- CNH;
 - multas;
-- indicadores de utilização;
-- custo por km;
-- dashboards executivos e relatórios.
+- dashboard executivo;
+- custo por KM;
+- ranking de utilização.
+
+Status: modelo de dados e dashboard inicial em implementação.
 
 ## V3 — Integrações
 
 - Microsoft Entra ID;
 - ERP/RH;
-- APIs de rastreadores;
+- rastreadores;
 - telemetria;
 - cartões de combustível;
 - notificações e Teams.
 
+## V4 — Escala comercial
+
+- onboarding self-service;
+- importação CSV/XLSX;
+- billing;
+- trial automatizado;
+- feature flags por plano;
+- observabilidade;
+- backup testado;
+- portal de suporte;
+- documentação de implantação;
+- SLA por plano.
+
 ## Princípio de produto
 
-O colaborador deve conseguir reservar, retirar e devolver um veículo em poucos passos. A complexidade administrativa fica restrita à equipe de Frota/Admin.
+O colaborador deve reservar, retirar e devolver um veículo em poucos passos. A complexidade de gestão fica concentrada nas telas de Frota/Admin.

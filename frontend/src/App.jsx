@@ -7,6 +7,7 @@ import { FleetAgendaPage } from './pages/FleetAgendaPage.jsx';
 import { PolicyPage } from './pages/PolicyPage.jsx';
 import { AdminDashboardPage } from './pages/AdminDashboardPage.jsx';
 import { OperationsPage } from './pages/OperationsPage.jsx';
+import { ManagementDashboardPage } from './pages/ManagementDashboardPage.jsx';
 
 export function App() {
   return (
@@ -19,6 +20,7 @@ export function App() {
         <Route path="agenda" element={<FleetAgendaPage />} />
         <Route path="politica" element={<PolicyPage />} />
         <Route path="admin" element={<AdminDashboardPage />} />
+        <Route path="gestao" element={<ManagementDashboardPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

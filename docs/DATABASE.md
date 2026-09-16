@@ -1,101 +1,84 @@
-# Frota Leve — Modelo de Dados v1
+# Frota Leve — Modelo de Dados SaaS
 
 ## Banco
 
-MySQL 8+
+MySQL 8+, database `frota_leve`.
 
-Database sugerido:
+## Isolamento multiempresa
 
-```text
-frota_leve
-```
+O sistema é multi-tenant. Toda tabela operacional contém `empresa_id` e os relacionamentos críticos usam foreign keys compostas `(empresa_id, id)`. Isso reduz o risco de uma reserva, operação ou custo apontar para um recurso pertencente a outro cliente.
 
-## Tabelas
+O backend nunca usa `empresa_id` enviado pelo frontend como fonte de autorização; o tenant é resolvido a partir da identidade autenticada.
 
-1. `estados`
-2. `cidades`
-3. `unidades`
-4. `departamentos`
-5. `usuarios`
-6. `perfis`
-7. `permissoes`
-8. `usuario_perfis`
-9. `perfil_permissoes`
-10. `categorias_veiculo`
-11. `veiculos`
-12. `reservas`
-13. `reserva_destinos`
-14. `manutencoes`
-15. `bloqueios_veiculo`
-16. `auditoria`
+## Control plane
 
-## Relacionamentos principais
+- `empresas`
+- `empresa_configuracoes`
+- `empresa_branding`
+- `planos`
+- `assinaturas`
+- `usuarios_plataforma`
+- `auditoria_plataforma`
 
-```text
-ESTADOS
-  └── CIDADES
-       ├── UNIDADES
-       │    ├── DEPARTAMENTOS
-       │    └── VEICULOS
-       └── RESERVA_DESTINOS
+## Núcleo operacional
 
-USUARIOS
-  ├── USUARIO_PERFIS ── PERFIS ── PERFIL_PERMISSOES ── PERMISSOES
-  ├── RESERVAS (solicitante)
-  ├── RESERVAS (motorista)
-  ├── RESERVAS (criado_por)
-  └── AUDITORIA
+- `unidades`
+- `departamentos`
+- `usuarios`
+- `perfis`
+- `permissoes`
+- `usuario_perfis`
+- `perfil_permissoes`
+- `categorias_veiculo`
+- `veiculos`
+- `reservas`
+- `reserva_destinos`
+- `manutencoes`
+- `bloqueios_veiculo`
+- `auditoria`
 
-VEICULOS
-  ├── RESERVAS
-  ├── BLOQUEIOS_VEICULO
-  └── MANUTENCOES
+## V1.5 — retirada/devolução
 
-RESERVAS
-  └── RESERVA_DESTINOS
-```
+Criada em `database/migrations/002_operations.sql`:
 
-## Decisões importantes
+- `chaves_veiculo`
+- `operacoes_veiculo`
+- `checklist_modelos`
+- `checklist_itens`
+- `operacao_checklist_respostas`
+- `avarias`
+- `custodia_chaves`
 
-### Reserva por intervalo
+## V2 — gestão financeira/preventiva
 
-Uma viagem corresponde a um único registro em `reservas`, com:
+Criada em `database/migrations/003_management.sql`:
 
-```text
-data_hora_inicio
-data_hora_fim
-```
+- `centros_custo`
+- `planos_manutencao`
+- `abastecimentos`
+- `custos_veiculo`
+- `documentos_veiculo`
+- `documentos_usuario`
+- `multas`
 
-Não existem slots horários persistidos por hora.
-
-### Múltiplos destinos
-
-Cada destino é um registro em `reserva_destinos`.
-
-A coluna `ordem` mantém a sequência da viagem.
-
-### Status derivado
-
-O banco persiste `CONFIRMADA` e `CANCELADA`. `EM_ANDAMENTO` e `CONCLUIDA` são derivados em tempo de execução.
-
-### Exclusão lógica
-
-Usuários e veículos são inativados, não apagados. Reservas são canceladas, não removidas.
-
-### Concorrência
-
-O MySQL não fornece uma exclusion constraint de intervalo equivalente ao PostgreSQL. A prevenção de dupla reserva é responsabilidade da transação do backend com lock no veículo e nova checagem de sobreposição antes do `INSERT`/`UPDATE`.
+A migration também adiciona centro de custo à reserva, KM atual ao veículo e custo/plano preventivo à manutenção.
 
 ## Índices críticos
 
 ```text
-reservas(veiculo_id, data_hora_inicio, data_hora_fim)
-bloqueios_veiculo(veiculo_id, data_hora_inicio, data_hora_fim, ativo)
-reservas(solicitante_id, data_hora_inicio)
-reservas(motorista_id, data_hora_inicio)
-cidades(estado_id, nome)
+reservas(empresa_id, veiculo_id, data_hora_inicio, data_hora_fim)
+bloqueios_veiculo(empresa_id, veiculo_id, data_hora_inicio, data_hora_fim, ativo)
+operacoes_veiculo(empresa_id, veiculo_id, status)
+abastecimentos(empresa_id, veiculo_id, data_hora)
+planos_manutencao(empresa_id, ativo, proxima_data, proximo_km)
+documentos_veiculo(empresa_id, status, validade_em)
+multas(empresa_id, status, vencimento_em)
 ```
 
-## Municípios
+## Ordem de instalação local
 
-A tabela `cidades` deve ser carregada a partir de base oficial com código IBGE. Estados são seed inicial; municípios serão importados por script/migration separado para evitar manter milhares de linhas manualmente no schema principal.
+1. `database/schema.sql`
+2. `database/migrations/002_operations.sql`
+3. `database/migrations/003_management.sql`
+4. `database/seed-development.sql`
+5. carga oficial de municípios do IBGE, quando o importador estiver pronto.
